@@ -1,1 +1,55 @@
-# TODO: Include Deployment
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name:  certmanager-interoperability-operator
+  namespace: operators
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: certmanager-interoperability-operator
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch", "update"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: certmanager-interoperability-operator
+subjects:
+- kind: ServiceAccount
+  name: certmanager-interoperability-operator
+  namespace: operators
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: certmanager-interoperability-operator
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: certmanager-interoperability-operator
+  namespace: operators
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "certmanager-interoperability-operator"
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: "certmanager-interoperability-operator"
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: ""
+      serviceAccountName: certmanager-interoperability-operator
+      automountServiceAccountToken: true
+      containers:
+      - name: certmanager-interoperability-operator
+        image: deinstapel/certmanager-interoperability-operator:v1
